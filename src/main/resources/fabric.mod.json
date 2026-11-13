@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "demiurge",
+  "version": "${version}",
+  "name": "Demiurge",
+  "description": "Become an omnipotent being. Erase entities into shadows, split the world into atoms, command a Legion of one billion, and face the Custodians who defend the world.",
+  "authors": ["hurma"],
+  "contact": {
+    "sources": "https://github.com/kabiriyer3-cmyk/Demiurge"
+  },
+  "license": "MIT",
+  "icon": "assets/demiurge/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.hurma.demiurge.Demiurge"],
+    "client": ["dev.hurma.demiurge.client.DemiurgeClient"]
+  },
+  "mixins": [
+    {
+      "config": "demiurge.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "accessWidener": "demiurge.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

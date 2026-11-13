@@ -1,0 +1,72 @@
+plugins {
+    id 'fabric-loom' version '1.9-SNAPSHOT'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/demiurge.accesswidener")
+}
+
+// ---------------------------------------------------------------------------
+// Every texture and every entity model geometry is generated procedurally by
+// tools/assetgen.py (pure Python 3, no dependencies). No binary assets in git.
+// ---------------------------------------------------------------------------
+def assetgenDir = layout.buildDirectory.dir("generated/assetgen")
+def pythonExe = System.getenv("PYTHON") ?: (System.getProperty("os.name").toLowerCase().contains("windows") ? "python" : "python3")
+
+def generateAssets = tasks.register("generateAssets", Exec) {
+    group = "build"
+    description = "Generates textures and entity model geometry (tools/assetgen.py)."
+    inputs.file("tools/assetgen.py")
+    outputs.dir(assetgenDir)
+    commandLine pythonExe, file("tools/assetgen.py").absolutePath, assetgenDir.get().asFile.absolutePath
+}
+
+sourceSets {
+    main {
+        java.srcDir(files(assetgenDir.map { it.dir("java") }).builtBy(generateAssets))
+        resources.srcDir(files(assetgenDir.map { it.dir("resources") }).builtBy(generateAssets))
+    }
+}
+
+tasks.named("compileJava") { dependsOn generateAssets }
+tasks.named("processResources") { dependsOn generateAssets }
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = "UTF-8"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
